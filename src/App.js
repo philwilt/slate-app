@@ -1,27 +1,69 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import { Editor } from 'slate-react';
+import  { Value } from 'slate';
+import CodeNode from './CodeNode';
+import BoldMark from './BoldMark';
+import MarkHotkey from './MarkHotkey';
+
 import './App.css';
 
+const plugins = [
+  MarkHotkey({type: 'bold', key: 'b' }),
+  MarkHotkey({type: 'code', key: '`' }),
+  MarkHotkey({type: 'italic', key: 'i' }),
+  MarkHotkey({type: 'strikethrough', key: '-' }),
+  MarkHotkey({type: 'underline', key: 'u' }),
+]
+
+const initialValue = Value.fromJSON({
+  document: {
+    nodes: [{
+      object: 'block',
+      type: 'paragraph',
+      nodes: [{
+        object: 'text',
+        leaves: [{
+          text: 'A line of text in a paragraph.',
+        }],
+      }],
+    }],
+  },
+});
+
 class App extends Component {
+  state = {
+    value: initialValue,
+  }
+
+  handleOnChange = ({ value }) => {
+    this.setState({ value })
+  }
+
+  renderMark = (props, next) => {
+    switch (props.mark.type) {
+      case 'bold':
+        return <BoldMark {...props} />
+      case 'code':
+        return <CodeNode {...props} />
+      case 'italic':
+        return <em>{props.children}</em>
+      case 'strikethrough':
+        return <del>{props.children}</del>
+      case 'underline':
+        return <u>{props.children}</u>
+      default:
+        return next()
+    }
+  }
+
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
+      <Editor
+        plugins={plugins}
+        value={this.state.value}
+        onChange={this.handleOnChange}
+        renderMark={this.renderMark}
+      />);
   }
 }
 
